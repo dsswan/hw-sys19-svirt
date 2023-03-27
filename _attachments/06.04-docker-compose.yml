@@ -1,0 +1,74 @@
+version: "3"
+services:
+
+  netology-db:
+    image: postgres
+    container_name: lebedevds-netology-db
+    ports:
+      - 5432:5432
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data/pgdata
+    environment:
+      POSTGRES_PASSWORD: lebedevds12!3!!
+      POSTGRES_DB: lebedevds-db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    networks:
+      lebedevds-my-netology-hw:
+        ipv4_address: 172.22.0.2
+    restart: always
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: lebedevds-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: lebedevds@ilove-netology.com
+      PGADMIN_DEFAULT_PASSWORD: 123
+    ports:
+      - "61231:80"
+    networks:
+      lebedevds-my-netology-hw:
+        ipv4_address: 172.22.0.3
+    restart: always
+
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql
+    links:
+      - netology-db
+    container_name: lebedevds-netology-zabbix-netology
+    environment:
+      DB_SERVER_HOST: '172.22.0.2'
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: lebedevds12!3!!
+    ports:
+      - "10051:10051"
+    networks:
+      lebedevds-my-netology-hw:
+        ipv4_address: 172.22.0.4
+    restart: always
+
+  zabbix_wgui:
+    image: zabbix/zabbix-web-apache-pgsql
+    links:
+      - netology-db
+      - zabbix-server
+    container_name: lebedevds-netology-zabbix-frontend
+    environment:
+      DB_SERVER_HOST: '172.22.0.2'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: lebedevds12!3!!
+      ZBX_SERVER_HOST: "zabbix_wgui"
+      PHP_TZ: "Asia/Yekaterinburg"
+    ports:
+      - "80:8080"
+      - "443:8443"
+    networks:
+      lebedevds-my-netology-hw:
+        ipv4_address: 172.22.0.5
+    restart: always
+
+networks:
+  lebedevds-my-netology-hw:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.22.0.0/24
